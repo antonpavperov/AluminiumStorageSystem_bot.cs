@@ -1,4 +1,5 @@
-﻿using AluminiumStorageSystem.CORE.Dtos;
+﻿using AluminiumStorageSystem.CORE.AluminiumStorageSystem.CORE.Exceptions;
+using AluminiumStorageSystem.CORE.Dtos;
 using AluminiumStorageSystem.CORE.Dtos.AluminiumStorageSystem.CORE.Dtos;
 using AluminiumStorageSystem.DAL.Repositories;
 
@@ -21,46 +22,72 @@ namespace AluminiumStorageSystem.BLL
 
         public ApplicationDetailsDto GetApplicationDetails(int applicationId)
         {
-            // Получаем заявку из Repository
-            var application = _appRepo.GetApplicationById(applicationId);
-            if (application == null) return null;
-
-            // Создаем DTO с расшифрованными данными
-            var applicationDetails = new ApplicationDetailsDto
+            try
             {
-                Id = application.Id,
-                ApplicationDate = application.ApplicationDate,
-                Status = application.Status,
-                Comment = application.Comment
-            };
+                var application = _appRepo.GetApplicationById(applicationId);
 
-            // Расшифровываем Supplier
-            var supplier = _supplierRepo.GetSupplierById(application.SupplierId);
-            applicationDetails.SupplierName = supplier?.Name ?? "Неизвестный поставщик";
+                
+                var scrapTypes = _scrapTypeRepo.GetScrapTypes();
+                var supplier = _supplierRepo.GetSupplierById(application.SupplierId); // ← ПРАВИЛЬНЫЙ репозиторий
+                var manager = _managerRepo.GetManagerById(application.ManagerId);
 
-            // Расшифровываем Manager
-            var manager = _managerRepo.GetManagerById(application.ManagerId);
-            applicationDetails.ManagerName = manager?.Name ?? "Неизвестный менеджер";
-            applicationDetails.ManagerPhone = manager?.Phone;
-
-            // Расшифровываем Items с названиями ScrapType
-            var scrapTypes = _scrapTypeRepo.GetScrapTypes();
-            applicationDetails.Items = application.Items.Select(item =>
-            {
-                var scrapType = scrapTypes.FirstOrDefault(st => st.Id == item.ScrapTypeId);
-                return new ApplicationItemDetailsDto
+                var applicationDetails = new ApplicationDetailsDto
                 {
-                    ScrapTypeName = scrapType?.name ?? "Неизвестный тип лома",
-                    Quantity = item.Quantity,
-                    Price = item.Price,
-                    TotalPrice = item.TotalPrice
+                    Id = application.Id,
+                    ApplicationDate = application.ApplicationDate,
+                    Status = application.Status,
+                    Comment = application.Comment,
+                    
+                    SupplierName = supplier?.Name ?? "Неизвестный поставщик",
+                    ManagerName = manager?.Name ?? "Неизвестный менеджер",
+                    ManagerPhone = manager?.Phone,
+                    Items = application.Items.Select(item =>
+                    {
+                        var scrapType = scrapTypes.FirstOrDefault(st => st.Id == item.ScrapTypeId);
+                        return new ApplicationItemDetailsDto
+                        {
+                            ScrapTypeName = scrapType?.name ?? "Неизвестный тип лома",
+                            Quantity = item.Quantity,
+                            Price = item.Price,
+                            TotalPrice = item.TotalPrice
+                        };
+                    }).ToList()
                 };
-            }).ToList();
 
-            return applicationDetails;
+                return applicationDetails;
+            }
+            catch (ApplicationNotFoundException ex)
+            {
+                
+                throw;
+            }
+            catch (Exception ex)
+            {
+                
+                throw new Exception($"Ошибка при получении заявки {applicationId}", ex);
+            }
+        }
+        public ApplicationDto GetApplicationById(int id)
+        {
+            try
+            {
+                
+                var application = _appRepo.GetApplicationBasicInfo(id);
+                var items = _appRepo.GetApplicationItems(id);
+
+                application.Items = items;
+                return application;
+            }
+            catch (ApplicationNotFoundException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new ServiceException($"Ошибка при получении заявки {id}", ex);
+            }
         }
 
-        // Остальные методы остаются без изменений
         public int CreateApplication(ApplicationDto application)
         {
             ValidateApplication(application);

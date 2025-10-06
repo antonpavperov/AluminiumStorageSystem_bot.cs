@@ -24,6 +24,6 @@ public class ApplicationItemDto
     public decimal Quantity { get; set; }
     public string ScrapTypeName { get; set; }
     public decimal Price { get; set; }
-    public decimal TotalPrice { get; set; }
-}
+    public decimal TotalPrice => Quantity * Price;
+    }
 }

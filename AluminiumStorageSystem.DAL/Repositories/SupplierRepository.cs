@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AluminiumStorageSystem.CORE;
+using AluminiumStorageSystem.CORE.AluminiumStorageSystem.CORE.Exceptions;
 using AluminiumStorageSystem.CORE.Dtos;
 using AluminiumStorageSystem.DAL.Queries;
 using Npgsql;
@@ -57,7 +58,7 @@ namespace AluminiumStorageSystem.DAL.Repositories
                         };
                     }
                 }
-                return null;
+                throw new SupplierNotFoundException(id);
             }
         }
 
