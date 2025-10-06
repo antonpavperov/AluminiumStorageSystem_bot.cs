@@ -42,3 +42,11 @@ CREATE TABLE IF NOT EXISTS application_items (
     price DECIMAL(10,2),
     total_price DECIMAL(10,2)
 );
+-- Создание индексов для оптимизации
+CREATE INDEX idx_managers_name ON managers(name);
+CREATE INDEX idx_suppliers_name ON suppliers(name);
+CREATE INDEX idx_scrap_types_name ON scrap_types(name);
+CREATE INDEX idx_applications_supplier ON applications(supplier_id);
+CREATE INDEX idx_applications_manager ON applications(manager_id);
+CREATE INDEX idx_application_items_application ON application_items(application_id);
+CREATE INDEX idx_application_items_scrap_type ON application_items(scrap_type_id);
